@@ -2,7 +2,112 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from flask import Flask as Fl
+from flask import render_template
+from flask import request
+from flask import session
+import requests as rq
+import csv
+import shutil
+from pylatex import Document, Section, Subsection, Tabular, Math, TikZ, Axis, \
+    Plot, Figure, Matrix, Alignat
+from pylatex.utils import italic
+app= Fl(__name__)
+app.secret_key= b'qsaz^qw!ea@nk,lj'
+#def usernamee():
+    #username=session['username]
+username=None
+@app.route('/signup1')
+def signup1():
+    with app.app_context():
+        return render_template('signup.html', text="" )
+@app.route('/login1')
+def login1():
+    with app.app_context():
+        return render_template('login.html', text="" )
+@app.route('/signup', methods=['Post'])
+def signup():
+    username= request.form['username']
+    for folder in os.listdir(directory+'\\data'):
+        if folder==username:
+            with app.app_context():
+                return render_template('signup.html', text='pick a different username')
+    os.mkdir(directory + '\\data\\' + username)
+    with app.app_context():
+        return render_template('login.html')
 
+class login():
+    @app.route("/login", methods=['Post'])
+    def login():
+        username=session['username']=request.form['username']
+        for folder in os.listdir(directory+'\\data'):
+            if folder==username:
+                filenames = []
+                iter = 0
+                for file in os.listdir(directory + '\\data\\' + folder): 
+                    filenames.append([file,iter])
+                    iter+=1
+                with app.app_context():
+                    return render_template('NPRreportWithText.html', list=filenames)
+        with app.app_context():
+            return render_template('login.html', text= 'the written username or password is incorrect. please try again')
+    @app.route("/login", methods=['Post'])
+    def username():
+        username=session['username']=request.form['username']
+        return(username)
+@app.route('/enter')
+def enter():
+    with app.app_context():
+        return render_template('enter.html')
+@app.route('/')#methods=["Post"])
+def NPRreport():
+    if 'username' in session: 
+        username=session['username']
+        print ('yes')
+        filenames = []
+        iter = 0
+        for filename in os.listdir(directory + "\\data\\" + username):
+            filenames.append([filename,iter])
+            iter+=1
+        with app.app_context():
+            return render_template('NPRreportWithText.html', list=filenames)
+    else:
+        print ('no')
+        return render_template('enter.html')
+@app.route('/reload/', methods=['Post'])
+def reload():
+    #username= session['username']=request.form['username'] 
+    file=request.files['fileadd']
+    file_name=session['file.filename']= file.filename
+    import csv
+    #with open(directory+"\\data"+filename, 'wb') as csvFile:
+    #    writer= csv.writer(csvFile)
+    #    writer.writerows(csvstff)
+    addfile(file)
+    #file.save(directory + "\\data\\" + username + '\\' + file_name)
+#    os.path.join(directory + "\\data", file)
+#    filenames = []
+ #   iter= 0
+#    for filename in os.listdir(directory + "\\data\\" + username):
+ #       filenames.append([filename,iter])
+  #      iter+=1
+    filenames=makelist()
+        #shutil.copy(directory+'\\work\\'+filename, directory+'\\data\\')
+    with app.app_context():
+        return render_template('NPRreportWithText.html', list=filenames)
+def addfile(file):
+    filename=str(file.filename)
+    username=str(session['username'])
+    file.save(directory + "\\data\\" + username + '\\' + filename)
+    #shutil.move(file, directory+'\\data\\'+username)
+def makelist():
+    username=session['username']
+    filenames=[]
+    iter=0
+    for filename in os.listdir(directory + "\\data\\" + username):
+        filenames.append([filename,iter])
+        iter+=1
+    return (filenames)
 class User:
     def __init__(self, per, entl, octn):
         self.per = per
@@ -96,7 +201,7 @@ class Node:
         self.next = next
     
 
-directory = r'C:\Users\Nikolas\Desktop\Harvard Class\Class3\lecture3\test'
+directory = r'C:\Users\Administrator\NPRreporting\Costidity\NPRCube'
 
 ''' USE THIS SECTION TO DEFINE THE NAMES OF THE OCTANTS ON THE HORIZONTAL AXIS OF THE GRAPH'''
 #For all colos visit https://matplotlib.org/stable/gallery/color/named_colors.html and scroll down a little
@@ -147,23 +252,61 @@ Y_COLOR = "Black"
 
 COSTIDITY_COEFF = [1,2,3,4,2,3,5,1]
 constant = 100
+         
 
-
-
-def main(file):
+@app.route("/report/", methods=['POST'])
+def main():
+    print("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\")
+    print(request.form)
+    boxes=[]
+    for key in request.form:
+        boxes.append(request.form[key])
+    file = boxes[0]
+    print (boxes[1])
     lines = ""
     counter, altc = plot('file_path', file)
     plotmoney(constant, COSTIDITY_COEFF, counter, [0,0,0,0,0,0,0,0])
-    for filename in os.listdir(directory):
-        if filename == "compare.txt":
-            file = open(directory+"//"+filename, "r")
-            lines = file.readlines()
-            compare(lines)
-        else:
-            continue
+    print("boxes "+str(len(boxes)))
+    if len(boxes)>2:
+        A, c1, c2, b1, b2 = compare(boxes)
+        geometry_options = {"tmargin": "1cm", "lmargin": "10cm"}
+        #doc = Document(geometry_options=geometry_options)
 
-
+        print("It should be creating the thing")
+        #with doc.create(Section('Matrix Equation')):
+         #   with doc.create(Subsection('Correct matrix equations')):
+          #      doc.append(Math(data=[Matrix(c2), "=", Matrix(A), '(', Matrix(c1), "-", Matrix(b1), "+", Matrix(b2)]))
+        #doc.generate_pdf(compiler='pdflatex')
+        ''' I dont know what this does, I don't think we need it? I'm not sure. We'll see if stuff breaks...
+        np.savetxt('compare.txt',c2,fmt='%.2f')
+        np.savetxt('compare.txt',A,fmt='%.2f')
+        np.savetxt('compare.txt',c1,fmt='%.2f')
+        np.savetxt('compare.txt',b1,fmt='%.2f')
+        np.savetxt('compare.txt',b2,fmt='%.2f')
+        '''
+        return render_template("compare.html", list = [A,c1,c2,b1,b2])
+        
+    #for filename in os.listdir(directory):
+    #    if filename == "compare.txt":
+    #        file = open(directory+"//"+filename, "r")
+    #        lines = file.readlines()
+    #        A, c1, c2, b1, b2 = compare(lines)
+    #   else:
+    #       continue
+    plots=[]
+    shit = "\\templates\\test\\output\\"
+    for file in os.listdir(directory + "\\static\\"):
+        os.remove(directory + "\\static\\"+file)
+    #for file in os.listdir(directory + "\\data\\"):
+    #   os.remove(directory + "\\data\\"+file)
+    for file in os.listdir(directory + shit):
+        plots.append(file)
+        shutil.move(directory+shit+file, directory+"\\static\\")
+    with app.app_context():
+        return render_template('resolution.html', list=plots)
+#        return render_template('file:///C:/Users/Administrator/NPRreporting/Costidity/NPRCube/templates/test/output/', list=plots)
     
+
 def difference(lst1, lst2):
     return list(set(lst1) - set(lst2))
  
@@ -181,9 +324,18 @@ def formatter(dirP):
 def plot(file_path, file):
     f = open("demofile2.txt", "a")
     filenames = []
-    for filename in os.listdir(directory + '\\data'):
+    username=session['username']
+    for filename in os.listdir(directory + '\\data\\' + username):
         #if filename.endswith(".csv"):
+        print ('3')
+        print (filename)
+        print (file)
+        print ('3')
         if filename == file:
+            print('2')
+            print (filename)
+            print (file)
+            print ('2')
             filenames.append(os.path.join("", filename))
             f.write(filename+"\n")
         else:
@@ -193,7 +345,11 @@ def plot(file_path, file):
     plt.rc('xtick', labelsize=5)
     counter = [0,0,0,0,0,0,0,0]
     altc = [0,0,0,0,0,0,0,0]
-    dirP = directory + '\\data\\' + filenames[0]
+   # username=session['username']
+    print ('1')
+    print (filenames)
+    print ('1')
+    dirP = directory + '\\data\\' + username + '\\' + filenames[0]
     data = formatter(dirP)
     for index, row in data.iterrows():
         counter[(7-(row[4]*4+row[5]*2+row[6]))]+=1
@@ -247,7 +403,7 @@ def plotter(x, y, tit, counter, labels, maximum, color, output):
 
     plt.tight_layout()
     plt.plot()
-    plt.savefig(directory + '\\templates\\test\\output\\' + output+".svg")
+    plt.savefig(directory + '//templates//test//output//' + output+".svg")
     
 def plotmoney(constant, constarr, counter, money):
     total = 0
@@ -269,8 +425,8 @@ def plotmoney(constant, constarr, counter, money):
     
 def compare(lines):
     lines[0] = lines[0].replace("\n", "")
-    dirP1 = directory + "\\data\\" +lines[0]+ ".csv"
-    dirP2 = directory + "\\data\\" +lines[1]+ ".csv"
+    dirP1 = directory + "\\data\\" +lines[0]
+    dirP2 = directory + "\\data\\" +lines[1]
     data1 = formatter(dirP1)
     data2 = formatter(dirP2)
     l1 = LinkedList()
@@ -304,6 +460,8 @@ def compare(lines):
     for i in range(8):
         if (c1-b1)[i] !=0:
             A[:,i] = A[:,i]/(c1-b1)[i]
+    
+    
     print('common')
     print(common)
     print('c')
@@ -319,6 +477,7 @@ def compare(lines):
     print(A)
     #(c2) = A(c1-b1)+b2
     print(log)
+    return A, c1, c2, b1, b2
     
 def simplemethod(l1, l2, l3, i, j):
     if (l2.head.val.compare(j.val)==2):
@@ -390,4 +549,4 @@ def simplemethod(l1, l2, l3, i, j):
             i.next.prev = i.prev
     return l1, l2, l3    
     
-main("Mockup_data_June1.csv")
+#main("Mockup_data_June1.csv")

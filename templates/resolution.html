@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+  {% for file in list %}
+    <img src={{url_for('static', filename=file)}}></img>{{file}}<br><br>
+  {% endfor %}
+</body>
+</html>

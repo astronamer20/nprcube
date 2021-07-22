@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+
+<form action= "/report/" method="post">
+  {% for file in list %}
+            <input type="checkbox" name="fileid" value={{file}}>{{file}}</input><br><br>
+        {% endfor %}
+<button type="submit" name="press">Run Code</button>
+</form>
+</body>
+</html>

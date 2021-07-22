@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<form action= "/report/" method="post">
+  {% for file in list %}
+    <input type="checkbox" name={{file[1]}} value={{file[0]}}>{{file[0]}}</input><br><br>
+  {% endfor %}
+<button type="submit" name="press">Run Code</button>
+</form>
+<br><br>
+<form action= "/reload/" method="post" enctype='multipart/form-data'>
+			<input type="file" name="fileadd"><br><br>
+<button type="submit" name="press">add file</button>
+</form>
+</body>
+</html>
